@@ -23,16 +23,15 @@ public class GestorWeka {
                 datosOriginales.setClassIndex(datosOriginales.numAttributes() - 1);
             }
 
-            // --- NUEVO: PREPROCESAMIENTO ---
-            // El J48 no soporta Strings. Vamos a eliminar la columna 1 ('nombre')
+            // PREPROCESAMIENTO 
             Remove removeFilter = new Remove();
             removeFilter.setAttributeIndices("1"); // Weka cuenta desde 1 para las opciones
             removeFilter.setInputFormat(datosOriginales);
             
-            // Aplicamos el filtro: la nueva estructura ya no tiene el atributo 'nombre'
+            //Aplicamos el filtro: no tiene atributo 'nombre'
             estructuraDatos = Filter.useFilter(datosOriginales, removeFilter);
 
-            // Inicializar el algoritmo y entrenar con los datos limpios
+            //Inicializar el algoritmo y entrenar con los datos limpios
             modelo = new J48();
             modelo.buildClassifier(estructuraDatos);
             
@@ -52,18 +51,17 @@ public class GestorWeka {
         }
 
         try {
-            // Ahora la estructura tiene 4 atributos (edad, glucosa, carbohidratos, riesgo)
+            (edad, glucosa, carbohidratos, riesgo) // atributos
             Instance nuevaInstancia = new DenseInstance(estructuraDatos.numAttributes());
             nuevaInstancia.setDataset(estructuraDatos);
 
-            // ¡Atención! Los índices han cambiado porque eliminamos el 'nombre'
-            // Índice 0: 'edad'
+            //indice: 'edad'
             nuevaInstancia.setValue(0, edad);
-            // Índice 1: 'glucosa'
+            //indice: 'glucosa'
             nuevaInstancia.setValue(1, glucosa);
-            // Índice 2: 'carbohidratos'
+            //indice: 'carbohidratos'
             nuevaInstancia.setValue(2, carbohidratos);
-            // Índice 3: 'riesgo' (Weka lo calcula ahora)
+            //indice: 'riesgo' (Weka lo calcula ahora)
 
             double resultadoClasificacion = modelo.classifyInstance(nuevaInstancia);
             String prediccion = estructuraDatos.classAttribute().value((int) resultadoClasificacion);
@@ -81,7 +79,7 @@ public class GestorWeka {
     }
 
     public static void main(String[] args) {
-        System.out.println("--- INICIANDO TEST LOCAL DE GESTOR WEKA ---");
+        System.out.println("---TEST LOCAL WEKA ---");
         GestorWeka gestor = new GestorWeka();
         gestor.entrenarModelo();
 
@@ -92,7 +90,5 @@ public class GestorWeka {
         System.out.println("\n--- PRUEBA 2: Paciente con parámetros saludables ---");
         boolean esRiesgoAlto2 = gestor.predecirRiesgo(25, 85.0, 45.0);
         System.out.println(">> Resultado esperado: false (BAJO) | Resultado obtenido: " + esRiesgoAlto2);
-        
-        System.out.println("\n--- FIN DEL TEST LOCAL ---");
     }
 }
