@@ -1,0 +1,24 @@
+@relation diapredict_dataset
+
+@attribute nombre string
+@attribute edad numeric
+@attribute glucosa numeric
+@attribute carbohidratos numeric
+@attribute riesgo {ALTO, BAJO}
+
+@data
+'Juan Perez', 45, 140, 60.0, ALTO
+'Maria Gomez', 23, 90, 45.5, BAJO
+'Carlos Lopez', 60, 180, 85.0, ALTO
+'Ana Martinez', 31, 95, 30.0, BAJO
+'Luis Rodriguez', 52, 155, 70.0, ALTO
+'Laura Sanchez', 19, 85, 50.0, BAJO
+'Pedro Fernandez', 68, 210, 95.5, ALTO
+'Elena Diaz', 42, 110, 40.0, BAJO
+'Miguel Angel', 57, 165, 80.0, ALTO
+'Sofia Ruiz', 28, 99, 35.0, BAJO
+'Javier Garcia', 50, 135, 65.5, ALTO
+'Carmen Torres', 35, 92, 25.0, BAJO
+'Andres Castro', 63, 195, 90.0, ALTO
+'Lucia Morales', 25, 105, 55.0, BAJO
+'Diego Jimenez', 48, 150, 75.0, ALTO
