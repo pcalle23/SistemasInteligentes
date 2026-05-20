@@ -319,13 +319,10 @@ public class VentanaPaciente extends JFrame {
                 return;
             }
 
-            // ------------------------------------------------------------------
-            // ALEJANDRO / MARTA: Recibireis este array en el AgentePaciente.
-            // Orden: [0] String nombre | [1] int edad
-            //        [2] double glucosa | [3] double carbohidratos
-            // Usad setEnabledO2ACommunication + O2AListener en el setup().
-            // ------------------------------------------------------------------
-            Object[] datosPaciente = { nombre, edad, glucosa, carbohidratos };
+            // Se incluye 'this' en [0] para que el AgentePaciente tenga la referencia
+            // de la ventana y pueda llamar a mostrarResultado() cuando Weka responda.
+            // Orden del array: [0] ventana | [1] nombre | [2] edad | [3] glucosa | [4] carbohidratos
+            Object[] datosPaciente = { this, nombre, edad, glucosa, carbohidratos };
 
             try {
                 agentePaciente.putO2AObject(datosPaciente, false);
