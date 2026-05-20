@@ -51,7 +51,7 @@ public class GestorWeka {
         }
 
         try {
-            (edad, glucosa, carbohidratos, riesgo) // atributos
+            // atributos (edad, glucosa, carbohidratos, riesgo) 
             Instance nuevaInstancia = new DenseInstance(estructuraDatos.numAttributes());
             nuevaInstancia.setDataset(estructuraDatos);
 
