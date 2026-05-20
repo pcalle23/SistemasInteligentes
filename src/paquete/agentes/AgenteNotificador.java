@@ -25,7 +25,7 @@ public class AgenteNotificador extends Agent {
 
         try {
             DFService.register(this, dfd);
-            System.out.println("🚨 [Notificador] -> Registrado en el DF.");
+            System.out.println("[Notificador] -> Registrado en el DF.");
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
@@ -39,7 +39,7 @@ public class AgenteNotificador extends Agent {
         // Nos borramos del DF al apagar el agente
         try {
             DFService.deregister(this);
-            System.out.println("❌ [Notificador] -> Eliminado del DF.");
+            System.out.println("[Notificador] -> Eliminado del DF.");
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
@@ -51,17 +51,17 @@ public class AgenteNotificador extends Agent {
         public void action() {
             ACLMessage msg = myAgent.receive();
             if (msg != null) {
-                System.out.println("🚨 [Notificador] -> Alerta recibida de: " + msg.getSender().getLocalName());
+                System.out.println("Notificador] -> Alerta recibida de: " + msg.getSender().getLocalName());
 
                 // Comprobamos si es un mensaje de aviso (INFORM o REQUEST)
                 if (msg.getPerformative() == ACLMessage.INFORM) {
                     String contenido = msg.getContent();
                     
-                    System.out.println("🚨 [Notificador] -> MENSAJE DE EMERGENCIA: " + contenido);
-                    System.out.println("🚨 [Notificador] -> Simulando envio de alerta al movil del paciente...");
+                    System.out.println("[Notificador] -> MENSAJE DE EMERGENCIA: " + contenido);
+                    System.out.println("[Notificador] -> Simulando envio de alerta al movil del paciente...");
                     
                     // Aqui es donde se pondra el codigo de la API de Telegram mas adelante
-                    System.out.println("📲 [Notificador] -> Alerta enviada con exito.");
+                    System.out.println("[Notificador] -> Alerta enviada con exito.");
                 }
             } else {
                 // Si no hay alertas en el buzon, dormimos el hilo

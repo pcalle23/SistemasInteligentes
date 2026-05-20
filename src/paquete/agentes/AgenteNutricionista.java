@@ -25,7 +25,7 @@ public class AgenteNutricionista extends Agent {
 
         try {
             DFService.register(this, dfd);
-            System.out.println("🤖 [Nutricionista] -> Registrado en el DF.");
+            System.out.println("[Nutricionista] -> Registrado en el DF.");
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
@@ -39,7 +39,7 @@ public class AgenteNutricionista extends Agent {
         // Al morir el agente, nos borramos del DF para no dejar basura
         try {
             DFService.deregister(this);
-            System.out.println("❌ [Nutricionista] -> Eliminado del DF.");
+            System.out.println("[Nutricionista] -> Eliminado del DF.");
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
@@ -52,12 +52,12 @@ public class AgenteNutricionista extends Agent {
             ACLMessage msg = myAgent.receive();
             
             if (msg != null) {
-                System.out.println("🤖 [Nutricionista] -> Mensaje recibido de: " + msg.getSender().getLocalName());
+                System.out.println("[Nutricionista] -> Mensaje recibido de: " + msg.getSender().getLocalName());
                 
                 // Si nos piden una simulacion/calculo (REQUEST)
                 if (msg.getPerformative() == ACLMessage.REQUEST) {
                     String contenido = msg.getContent();
-                    System.out.println("🤖 [Nutricionista] -> Datos: " + contenido);
+                    System.out.println("[Nutricionista] -> Datos: " + contenido);
                     
                     // Respondemos al agente que nos escribio
                     ACLMessage respuesta = msg.createReply();
@@ -67,7 +67,7 @@ public class AgenteNutricionista extends Agent {
                     respuesta.setContent("Resultado-Nutricional: OK.");
                     
                     myAgent.send(respuesta);
-                    System.out.println("🤖 [Nutricionista] -> Respuesta enviada.");
+                    System.out.println("Nutricionista] -> Respuesta enviada.");
                 }
             } else {
                 // Si no hay mensajes, bloqueamos para no saturar la CPU
