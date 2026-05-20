@@ -23,11 +23,13 @@ public class VentanaPaciente extends JFrame {
     private static final Color AZUL_MEDIO   = new Color(41, 128, 185);
     private static final Color AZUL_CLARO   = new Color(214, 234, 248);
     private static final Color AZUL_ESTADO  = new Color(20,  67,  96);
+    private static final Color TURQUESA     = new Color(23, 165, 184);
+    private static final Color TURQUESA_CLARO = new Color(178, 224, 232);
     private static final Color BLANCO       = Color.WHITE;
-    private static final Color GRIS_SUAVE   = new Color(245, 247, 250);
-    private static final Color TEXTO_OSCURO = new Color(30,  39,  46);
+    private static final Color GRIS_SUAVE   = new Color(240, 246, 248);
+    private static final Color TEXTO_OSCURO = new Color(26,  82, 118);
     private static final Color TEXTO_GRIS   = new Color(127, 140, 141);
-    private static final Color VERDE_OK     = new Color(39, 174,  96);
+    private static final Color VERDE_OK     = new Color(175, 240, 212);
 
     // --- Campos del formulario ---
     private JTextField campoNombre;
@@ -69,90 +71,79 @@ public class VentanaPaciente extends JFrame {
     }
 
     // -----------------------------------------------------------------------
-    // CABECERA con estetoscopio dibujado en Java2D
+    // CABECERA: logo centrado + fondo patrón médico sutil
     // -----------------------------------------------------------------------
     private JPanel crearCabecera() {
-        JPanel cabecera = new JPanel(new BorderLayout()) {
+        JPanel cabecera = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(AZUL_OSCURO);
+
+                // Fondo degradado suave
+                GradientPaint gp = new GradientPaint(
+                    0, 0, new Color(234, 244, 248),
+                    getWidth(), getHeight(), new Color(208, 234, 240)
+                );
+                g2.setPaint(gp);
                 g2.fillRect(0, 0, getWidth(), getHeight());
+
+                // Símbolo + médico fondo derecha
+                g2.setColor(new Color(23, 165, 184, 18));
+                g2.setFont(new Font("SansSerif", Font.BOLD, 90));
+                g2.drawString("+", getWidth() - 80, 85);
+
+                // Corazón fondo izquierda
+                g2.setColor(new Color(26, 82, 118, 15));
+                g2.setFont(new Font("SansSerif", Font.BOLD, 65));
+                g2.drawString("♥", 14, getHeight() - 8);
+
+                // Segundo + pequeño
+                g2.setColor(new Color(23, 165, 184, 12));
+                g2.setFont(new Font("SansSerif", Font.BOLD, 45));
+                g2.drawString("+", getWidth() - 140, getHeight() - 8);
+
+                // Línea turquesa abajo
+                g2.setColor(TURQUESA);
+                g2.setStroke(new BasicStroke(3f));
+                g2.drawLine(0, getHeight() - 1, getWidth(), getHeight() - 1);
             }
         };
-        cabecera.setPreferredSize(new Dimension(480, 110));
-        cabecera.setBorder(BorderFactory.createEmptyBorder(16, 24, 16, 24));
+        cabecera.setLayout(new BoxLayout(cabecera, BoxLayout.Y_AXIS));
+        cabecera.setPreferredSize(new Dimension(480, 120));
+        cabecera.setBorder(BorderFactory.createEmptyBorder(16, 20, 12, 20));
 
-        // Icono: círculo con estetoscopio dibujado en Java2D
-        JPanel iconoPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                setOpaque(false);
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                int cx = getWidth() / 2;
-                int cy = getHeight() / 2;
-                int r  = 30;
-
-                // Círculo gris translúcido
-                g2.setColor(new Color(255, 255, 255, 30));
-                g2.fillOval(cx - r, cy - r, r * 2, r * 2);
-                g2.setColor(new Color(255, 255, 255, 80));
-                g2.setStroke(new BasicStroke(1.5f));
-                g2.drawOval(cx - r, cy - r, r * 2, r * 2);
-
-                // Estetoscopio simplificado: arco + línea + círculo
-                g2.setColor(BLANCO);
-                g2.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-                // Auriculares (arco superior)
-                g2.drawArc(cx - 10, cy - 18, 20, 14, 0, 180);
-                // Tubo bajando
-                g2.drawLine(cx - 10, cy - 11, cx - 10, cy + 2);
-                g2.drawLine(cx + 10, cy - 11, cx + 10, cy + 2);
-                // Curva unión
-                g2.drawArc(cx - 10, cy - 2, 20, 14, 180, 180);
-                // Línea central hacia el diafragma
-                g2.drawLine(cx, cy + 12, cx, cy + 20);
-                // Diafragma (círculo)
-                g2.setStroke(new BasicStroke(2f));
-                g2.drawOval(cx - 6, cy + 18, 12, 12);
-                g2.setColor(new Color(255, 255, 255, 120));
-                g2.fillOval(cx - 6, cy + 18, 12, 12);
+        // Cargar el logo desde paquete.gui/logo.png
+        JLabel logoLabel;
+        try {
+            java.net.URL urlLogo = getClass().getResource("logo.png");
+            if (urlLogo != null) {
+                ImageIcon iconoOriginal = new ImageIcon(urlLogo);
+                Image imgEscalada = iconoOriginal.getImage().getScaledInstance(260, 72, Image.SCALE_SMOOTH);
+                logoLabel = new JLabel(new ImageIcon(imgEscalada));
+            } else {
+                logoLabel = new JLabel("DiaPredict");
+                logoLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
+                logoLabel.setForeground(AZUL_OSCURO);
             }
-            @Override
-            public Dimension getPreferredSize() { return new Dimension(76, 76); }
-        };
-        iconoPanel.setOpaque(false);
+        } catch (Exception e) {
+            logoLabel = new JLabel("DiaPredict");
+            logoLabel.setFont(new Font("SansSerif", Font.BOLD, 28));
+            logoLabel.setForeground(AZUL_OSCURO);
+        }
+        logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Textos
-        JPanel textos = new JPanel();
-        textos.setLayout(new BoxLayout(textos, BoxLayout.Y_AXIS));
-        textos.setOpaque(false);
-        textos.setBorder(BorderFactory.createEmptyBorder(0, 16, 0, 0));
+        JLabel subtitulo = new JLabel("SISTEMA DE PREDICCIÓN DE DIABETES");
+        subtitulo.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        subtitulo.setForeground(new Color(120, 150, 160));
+        subtitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel titulo = new JLabel("DiaPredict");
-        titulo.setFont(new Font("SansSerif", Font.BOLD, 24));
-        titulo.setForeground(BLANCO);
-
-        JLabel subtitulo = new JLabel("Panel de Control Médico");
-        subtitulo.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        subtitulo.setForeground(new Color(200, 220, 240));
-
-        JLabel version = new JLabel("Sistema de Predicción de Diabetes  ·  v1.0");
-        version.setFont(new Font("SansSerif", Font.PLAIN, 10));
-        version.setForeground(new Color(160, 195, 225));
-
-        textos.add(titulo);
-        textos.add(Box.createVerticalStrut(3));
-        textos.add(subtitulo);
-        textos.add(Box.createVerticalStrut(4));
-        textos.add(version);
-
-        cabecera.add(iconoPanel, BorderLayout.WEST);
-        cabecera.add(textos,     BorderLayout.CENTER);
+        cabecera.add(Box.createVerticalGlue());
+        cabecera.add(logoLabel);
+        cabecera.add(Box.createVerticalStrut(6));
+        cabecera.add(subtitulo);
+        cabecera.add(Box.createVerticalGlue());
         return cabecera;
     }
 
@@ -164,13 +155,13 @@ public class VentanaPaciente extends JFrame {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                g.setColor(AZUL_ESTADO);
+                g.setColor(TURQUESA);
                 g.fillRect(0, 0, getWidth(), getHeight());
             }
         };
         barra.setOpaque(false);
 
-        // Punto verde animado (dibujado)
+        // Punto verde
         JPanel punto = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -188,7 +179,7 @@ public class VentanaPaciente extends JFrame {
 
         JLabel lblEstado = new JLabel("Agentes JADE conectados y listos");
         lblEstado.setFont(new Font("SansSerif", Font.PLAIN, 11));
-        lblEstado.setForeground(new Color(180, 220, 200));
+        lblEstado.setForeground(BLANCO);
 
         barra.add(punto);
         barra.add(lblEstado);
@@ -201,7 +192,7 @@ public class VentanaPaciente extends JFrame {
     private JPanel crearFormulario() {
         JPanel contenedor = new JPanel(new BorderLayout());
         contenedor.setBackground(GRIS_SUAVE);
-        contenedor.setBorder(BorderFactory.createEmptyBorder(18, 22, 18, 22));
+        contenedor.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
 
         JPanel tarjeta = new JPanel(new GridBagLayout()) {
             @Override
@@ -228,7 +219,7 @@ public class VentanaPaciente extends JFrame {
         JPanel iconoPersona = crearIcono("persona");
         JLabel lblSeccion = new JLabel("Datos del Paciente");
         lblSeccion.setFont(new Font("SansSerif", Font.BOLD, 13));
-        lblSeccion.setForeground(AZUL_OSCURO);
+        lblSeccion.setForeground(TURQUESA);
         tituloSeccion.add(iconoPersona);
         tituloSeccion.add(lblSeccion);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
@@ -236,7 +227,7 @@ public class VentanaPaciente extends JFrame {
 
         // Separador
         JSeparator sep = new JSeparator();
-        sep.setForeground(AZUL_CLARO);
+        sep.setForeground(TURQUESA_CLARO);
         gbc.gridy = 1; gbc.insets = new Insets(2, 0, 14, 0);
         tarjeta.add(sep, gbc);
         gbc.insets = new Insets(7, 0, 7, 0);
@@ -295,7 +286,7 @@ public class VentanaPaciente extends JFrame {
                 setOpaque(false);
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(AZUL_OSCURO);
+                g2.setColor(TURQUESA);
                 g2.setStroke(new BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 int cx = getWidth() / 2, cy = getHeight() / 2;
                 switch (tipo) {
@@ -365,7 +356,7 @@ public class VentanaPaciente extends JFrame {
         campo.setFont(new Font("SansSerif", Font.PLAIN, 13));
         campo.setForeground(TEXTO_OSCURO);
         campo.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 210, 220), 1, true),
+            BorderFactory.createLineBorder(TURQUESA_CLARO, 1, true),
             BorderFactory.createEmptyBorder(6, 8, 6, 8)
         ));
         campo.setBackground(BLANCO);
@@ -375,7 +366,7 @@ public class VentanaPaciente extends JFrame {
     private void estilizarSpinner(JSpinner spinner) {
         spinner.setFont(new Font("SansSerif", Font.PLAIN, 13));
         spinner.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(200, 210, 220), 1, true),
+            BorderFactory.createLineBorder(TURQUESA_CLARO, 1, true),
             BorderFactory.createEmptyBorder(4, 4, 4, 4)
         ));
     }
@@ -386,13 +377,15 @@ public class VentanaPaciente extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                GradientPaint gp;
                 if (getModel().isPressed()) {
-                    g2.setColor(AZUL_OSCURO);
+                    gp = new GradientPaint(0, 0, AZUL_OSCURO.darker(), getWidth(), getHeight(), TURQUESA.darker());
                 } else if (getModel().isRollover()) {
-                    g2.setColor(AZUL_MEDIO.brighter());
+                    gp = new GradientPaint(0, 0, AZUL_MEDIO, getWidth(), getHeight(), TURQUESA.brighter());
                 } else {
-                    g2.setColor(AZUL_MEDIO);
+                    gp = new GradientPaint(0, 0, AZUL_OSCURO, getWidth(), getHeight(), TURQUESA);
                 }
+                g2.setPaint(gp);
                 g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 10, 10));
 
                 // Icono de envío (flecha)
