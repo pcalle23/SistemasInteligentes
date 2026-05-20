@@ -87,6 +87,10 @@ public class AgentePaciente extends Agent {
                 
                 System.out.println("[Paciente] -> Recibidos datos de la GUI. Paciente: " + nombre);
                 
+                if (agenteNutricionistaAID == null || agentePredictorAID == null) {
+                    buscarAgentesServicio();
+                }
+                
                 // Iniciamos la cadena: mandamos los carbohidratos al Nutricionista
                 if (agenteNutricionistaAID != null) {
                     ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
