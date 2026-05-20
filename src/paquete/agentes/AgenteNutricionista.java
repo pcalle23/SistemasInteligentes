@@ -14,12 +14,12 @@ public class AgenteNutricionista extends Agent {
     protected void setup() {
         System.out.println("[Nutricionista] -> Agente " + getLocalName() + " iniciado.");
 
-        // Registro en las paginas amarillas (DF) para que el Paciente nos encuentre
+        // Nos registramos en el DF para que el Paciente nos encuentre
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID()); 
         
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("calculo-nutricional"); // Clave para la busqueda
+        sd.setType("calculo-nutricional"); 
         sd.setName("ServicioNutricionJADE");
         dfd.addServices(sd);
 
@@ -30,13 +30,11 @@ public class AgenteNutricionista extends Agent {
             fe.printStackTrace();
         }
 
-        // Activamos el comportamiento para escuchar mensajes
         addBehaviour(new EscucharPeticiones());
     }
 
     @Override
     protected void takeDown() {
-        // Al morir el agente, nos borramos del DF para no dejar basura
         try {
             DFService.deregister(this);
             System.out.println("[Nutricionista] -> Eliminado del DF.");
@@ -45,32 +43,42 @@ public class AgenteNutricionista extends Agent {
         }
     }
 
-    // Bucle para atender los mensajes que vayan llegando
+    // Comportamiento para evaluar los carbohidratos
     private class EscucharPeticiones extends CyclicBehaviour {
         @Override
         public void action() {
             ACLMessage msg = myAgent.receive();
             
             if (msg != null) {
-                System.out.println("[Nutricionista] -> Mensaje recibido de: " + msg.getSender().getLocalName());
-                
-                // Si nos piden una simulacion/calculo (REQUEST)
                 if (msg.getPerformative() == ACLMessage.REQUEST) {
-                    String contenido = msg.getContent();
-                    System.out.println("[Nutricionista] -> Datos: " + contenido);
                     
-                    // Respondemos al agente que nos escribio
+                    String datosRecibidos = msg.getContent();
+                    
+                    // Rompemos el string por las comas para sacar las variables
+                    // Formato esperado: nombre,edad,glucosa,carbohidratos
+                    String[] partes = datosRecibidos.split(",");
+                    
+                    String nombre = partes[0];
+                    double carbohidratos = Double.parseDouble(partes[3]);
+                    
+                    System.out.println("[Nutricionista] -> Analizando dieta de " + nombre + "...");
+                    
+                    // Logica basica de nutricion
+                    if (carbohidratos > 80.0) {
+                        System.out.println("[Nutricionista] -> Alerta: Consumo de carbohidratos muy alto (" + carbohidratos + "g).");
+                    } else {
+                        System.out.println("[Nutricionista] -> Consumo de carbohidratos dentro de los limites.");
+                    }
+                    
+                    // Devolvemos los datos intactos al Paciente para que se los pase a la IA
                     ACLMessage respuesta = msg.createReply();
                     respuesta.setPerformative(ACLMessage.INFORM);
-                    
-                    // Mas adelante cambiaremos este texto por los datos reales procesados
-                    respuesta.setContent("Resultado-Nutricional: OK.");
+                    respuesta.setContent(datosRecibidos);
                     
                     myAgent.send(respuesta);
-                    System.out.println("Nutricionista] -> Respuesta enviada.");
+                    System.out.println("[Nutricionista] -> Informe devuelto al Paciente.");
                 }
             } else {
-                // Si no hay mensajes, bloqueamos para no saturar la CPU
                 block();
             }
         }
