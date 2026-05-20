@@ -14,12 +14,12 @@ public class AgenteNotificador extends Agent {
     protected void setup() {
         System.out.println("[Notificador] -> Agente " + getLocalName() + " iniciado.");
 
-        // Registro en las paginas amarillas para que el Predictor nos encuentre
+        // Registro en el DF (Paginas Amarillas)
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
 
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("notificacion-alertas"); // Palabra clave para este servicio
+        sd.setType("notificacion-alertas");
         sd.setName("ServicioNotificacionJADE");
         dfd.addServices(sd);
 
@@ -30,14 +30,14 @@ public class AgenteNotificador extends Agent {
             fe.printStackTrace();
         }
 
-        // Activamos el bucle para escuchar alertas de peligro
+        // Añadimos el comportamiento para estar siempre escuchando
         addBehaviour(new EscucharAlertas());
     }
 
     @Override
     protected void takeDown() {
-        // Nos borramos del DF al apagar el agente
         try {
+            // Borramos el rastro al cerrar
             DFService.deregister(this);
             System.out.println("[Notificador] -> Eliminado del DF.");
         } catch (FIPAException fe) {
@@ -50,18 +50,17 @@ public class AgenteNotificador extends Agent {
         @Override
         public void action() {
             ACLMessage msg = myAgent.receive();
-            if (msg != null) {
-                System.out.println("Notificador] -> Alerta recibida de: " + msg.getSender().getLocalName());
 
-                // Comprobamos si es un mensaje de aviso (INFORM o REQUEST)
+            if (msg != null) {
+                // Comprobamos si es un mensaje de aviso (INFORM)
                 if (msg.getPerformative() == ACLMessage.INFORM) {
-                    String contenido = msg.getContent();
+                    String alertaText = msg.getContent();
                     
-                    System.out.println("[Notificador] -> MENSAJE DE EMERGENCIA: " + contenido);
-                    System.out.println("[Notificador] -> Simulando envio de alerta al movil del paciente...");
-                    
-                    // Aqui es donde se pondra el codigo de la API de Telegram mas adelante
-                    System.out.println("[Notificador] -> Alerta enviada con exito.");
+                    // Simulacion visual del sistema de emergencias en la consola
+                    System.out.println("\n--- [SISTEMA DE ALERTA MEDICA] ---");
+                    System.out.println("AVISO DE EMERGENCIA: " + alertaText);
+                    System.out.println("Simulando envio de mensaje SMS y Telegram al medico de guardia...");
+                    System.out.println("-----------------------------------\n");
                 }
             } else {
                 // Si no hay alertas en el buzon, dormimos el hilo

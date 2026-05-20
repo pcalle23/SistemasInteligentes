@@ -8,21 +8,27 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
+import paquete.ia.GestorWeka; // Conectamos con el codigo de Pablo
 
 public class AgentePredictor extends Agent {
 
-    private AID agenteNotificadorAID; // Guardaremos aqui la direccion del notificador
+    private AID agenteNotificadorAID;
+    private GestorWeka motorIA; // Guardamos el gestor de Weka
 
     @Override
     protected void setup() {
         System.out.println("[Predictor] -> Agente " + getLocalName() + " iniciado.");
 
-        // 1. Registro en las paginas amarillas para que el Paciente nos encuentre
+        // Inicializamos y entrenamos el modelo de Weka de Pablo al arrancar
+        motorIA = new GestorWeka();
+        motorIA.entrenarModelo();
+
+        // Registro en las paginas amarillas
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
 
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("prediccion-diabetes"); // Palabra clave de este agente
+        sd.setType("prediccion-diabetes");
         sd.setName("ServicioPrediccionJADE");
         dfd.addServices(sd);
 
@@ -33,11 +39,9 @@ public class AgentePredictor extends Agent {
             fe.printStackTrace();
         }
 
-        // 2. Buscar al AgenteNotificador en las paginas amarillas
-        // Lo hacemos al arrancar para tener su direccion guardada desde el principio
+        // Buscamos al notificador
         buscarAgenteNotificador();
 
-        // 3. Activar el comportamiento para escuchar al AgentePaciente
         addBehaviour(new EscucharPeticionesPrediccion());
     }
 
@@ -45,73 +49,71 @@ public class AgentePredictor extends Agent {
     protected void takeDown() {
         try {
             DFService.deregister(this);
-            System.out.println("❌ [Predictor] -> Eliminado del DF.");
+            System.out.println("[Predictor] -> Eliminado del DF.");
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
     }
 
-    // Metodo para buscar al notificador usando la palabra clave de su servicio
     private void buscarAgenteNotificador() {
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("notificacion-alertas"); // Buscamos este tipo exacto
+        sd.setType("notificacion-alertas");
         template.addServices(sd);
 
         try {
-            // Buscamos en el DF agentes que cumplan la plantilla
             DFAgentDescription[] result = DFService.search(this, template);
             if (result.length > 0) {
                 agenteNotificadorAID = result[0].getName();
-                System.out.println("[Predictor] -> Agente Notificador encontrado con exito.");
-            } else {
-                System.out.println("[Predictor] -> No se encontro ningun Agente Notificador libre.");
+                System.out.println("[Predictor] -> Agente Notificador encontrado.");
             }
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
     }
 
-    // Bucle para atender las peticiones de prediccion
     private class EscucharPeticionesPrediccion extends CyclicBehaviour {
         @Override
         public void action() {
             ACLMessage msg = myAgent.receive();
 
             if (msg != null) {
-                System.out.println("[Predictor] -> Peticion recibida de: " + msg.getSender().getLocalName());
-
                 if (msg.getPerformative() == ACLMessage.REQUEST) {
+                    
                     String datosPaciente = msg.getContent();
-                    System.out.println("[Predictor] -> Procesando datos con la IA: " + datosPaciente);
+                    
+                    // Separamos el texto recibido (nombre,edad,glucosa,carbohidratos)
+                    String[] partes = datosPaciente.split(",");
+                    String nombre = partes[0];
+                    double edad = Double.parseDouble(partes[1]);
+                    double glucosa = Double.parseDouble(partes[2]);
+                    double carbohidratos = Double.parseDouble(partes[3]);
 
-                    // --- CONEXION CON LA IA DE PABLO ---
-                    // De momento simulamos el resultado de Weka como "ALTO" de forma fija.
-                    // Cuando Pablo termine, aqui llamaremos a su clase GestorWeka.
-                    boolean esRiesgoAlto = true; 
+                    System.out.println("[Predictor] -> Consultando a Weka para el paciente " + nombre + "...");
 
-                    // Preparar respuesta para el AgentePaciente (el que nos pregunto)
+                    // LLAMADA REAL A LA IA DE PABLO
+                    boolean esRiesgoAlto = motorIA.predecirRiesgo(edad, glucosa, carbohidratos);
+
+                    // Preparamos la respuesta de vuelta al AgentePaciente
                     ACLMessage respuesta = msg.createReply();
                     respuesta.setPerformative(ACLMessage.INFORM);
 
                     if (esRiesgoAlto) {
-                        respuesta.setContent("Resultado: ALTO RIESGO");
+                        respuesta.setContent("Resultado para " + nombre + ": ALTO RIESGO DE DIABETES");
                         
-                        // Si hay peligro, enviamos una alerta directa al AgenteNotificador
+                        // Si da alto riesgo, mandamos la alerta urgente al Notificador
                         if (agenteNotificadorAID != null) {
                             ACLMessage mensajeAlerta = new ACLMessage(ACLMessage.INFORM);
                             mensajeAlerta.addReceiver(agenteNotificadorAID);
-                            mensajeAlerta.setContent("Alerta: Paciente con riesgo alto detectado.");
+                            mensajeAlerta.setContent("Urgente: El paciente " + nombre + " presenta un riesgo alto de diabetes.");
                             myAgent.send(mensajeAlerta);
-                            System.out.println("[Predictor] -> Alerta de emergencia enviada al Notificador.");
                         }
                     } else {
-                        respuesta.setContent("Resultado: BAJO RIESGO");
+                        respuesta.setContent("Resultado para " + nombre + ": RIESGO BAJO. Todo correcto.");
                     }
 
-                    // Respondemos al Paciente para que lo pinte en la pantalla de Isa
                     myAgent.send(respuesta);
-                    System.out.println("[Predictor] -> Respuesta enviada al Paciente.");
+                    System.out.println("[Predictor] -> Prediccion enviada al AgentePaciente.");
                 }
             } else {
                 block();
