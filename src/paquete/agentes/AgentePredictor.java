@@ -8,7 +8,7 @@ import jade.domain.DFService;
 import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
-import paquete.ia.GestorWeka; // Conectamos con el codigo de Pablo
+import paquete.ia.GestorWeka; 
 
 public class AgentePredictor extends Agent {
 
@@ -82,17 +82,24 @@ public class AgentePredictor extends Agent {
                     
                     String datosPaciente = msg.getContent();
                     
-                    // Separamos el texto recibido (nombre,edad,glucosa,carbohidratos)
+                    // Separamos el texto recibido(11 campos)
                     String[] partes = datosPaciente.split(",");
+                    
                     String nombre = partes[0];
                     double edad = Double.parseDouble(partes[1]);
-                    double glucosa = Double.parseDouble(partes[2]);
-                    double carbohidratos = Double.parseDouble(partes[3]);
+                    
+                    // Extraemos solo las glucosas (ignoramos los carbohidratos en las posiciones 3, 6 y 9)
+                    double glucosaAyunas = Double.parseDouble(partes[2]);
+                    double glucosaPostDesayuno = Double.parseDouble(partes[4]);
+                    double glucosaComida = Double.parseDouble(partes[5]);
+                    double glucosaPostComida = Double.parseDouble(partes[7]);
+                    double glucosaCena = Double.parseDouble(partes[8]);
+                    double glucosaPostCena = Double.parseDouble(partes[10]);
 
-                    System.out.println("[Predictor] -> Consultando a Weka para el paciente " + nombre + "...");
+                    System.out.println("[Predictor] -> Consultando a Weka para el paciente " + nombre + " con sus 6 tomas de glucosa...");
 
-                    // LLAMADA REAL A LA IA DE PABLO
-                    boolean esRiesgoAlto = motorIA.predecirRiesgo(edad, glucosa, carbohidratos);
+                    // Llamada a la ia
+                    boolean esRiesgoAlto = motorIA.predecirRiesgo(edad, glucosaAyunas, glucosaPostDesayuno, glucosaComida, glucosaPostComida, glucosaCena, glucosaPostCena);
 
                     // Preparamos la respuesta de vuelta al AgentePaciente
                     ACLMessage respuesta = msg.createReply();
@@ -105,7 +112,7 @@ public class AgentePredictor extends Agent {
                         if (agenteNotificadorAID != null) {
                             ACLMessage mensajeAlerta = new ACLMessage(ACLMessage.INFORM);
                             mensajeAlerta.addReceiver(agenteNotificadorAID);
-                            mensajeAlerta.setContent("Urgente: El paciente " + nombre + " presenta un riesgo alto de diabetes.");
+                            mensajeAlerta.setContent("Urgente: El paciente " + nombre + " presenta un riesgo alto de diabetes según criterios ADA.");
                             myAgent.send(mensajeAlerta);
                         }
                     } else {
