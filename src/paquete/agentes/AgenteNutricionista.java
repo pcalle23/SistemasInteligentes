@@ -43,7 +43,7 @@ public class AgenteNutricionista extends Agent {
         }
     }
 
-    // Comportamiento para evaluar los carbohidratos
+    // Comportamiento para evaluar los carbohidratos de todo el dia
     private class EscucharPeticiones extends CyclicBehaviour {
         @Override
         public void action() {
@@ -54,23 +54,38 @@ public class AgenteNutricionista extends Agent {
                     
                     String datosRecibidos = msg.getContent();
                     
-                    // Rompemos el string por las comas para sacar las variables
-                    // Formato esperado: nombre,edad,glucosa,carbohidratos
+                    // Rompemos el string por las comas
                     String[] partes = datosRecibidos.split(",");
                     
+                    // Extraemos solo lo que le importa al Nutricionista segun su posicion
                     String nombre = partes[0];
-                    double carbohidratos = Double.parseDouble(partes[3]);
+                    double carbDesayuno = Double.parseDouble(partes[3]);
+                    double carbComida = Double.parseDouble(partes[6]);
+                    double carbCena = Double.parseDouble(partes[9]);
                     
-                    System.out.println("[Nutricionista] -> Analizando dieta de " + nombre + "...");
+                    System.out.println("[Nutricionista] -> Analizando diario dietético de " + nombre + "...");
                     
-                    // Logica basica de nutricion
-                    if (carbohidratos > 80.0) {
-                        System.out.println("[Nutricionista] -> Alerta: Consumo de carbohidratos muy alto (" + carbohidratos + "g).");
-                    } else {
-                        System.out.println("[Nutricionista] -> Consumo de carbohidratos dentro de los limites.");
+                    //  Evaluamos si se pasa de la carga glucemica recomendada en cada comida
+                    boolean exceso = false;
+                    
+                    if (carbDesayuno > 60.0) {
+                        System.out.println("[Nutricionista] -> Alerta: Desayuno demasiado alto en carbohidratos (" + carbDesayuno + "g).");
+                        exceso = true;
+                    }
+                    if (carbComida > 75.0) {
+                        System.out.println("[Nutricionista] -> Alerta: Comida excesivamente pesada (" + carbComida + "g).");
+                        exceso = true;
+                    }
+                    if (carbCena > 45.0) {
+                        System.out.println("[Nutricionista] -> Alerta: Cena con demasiados carbohidratos (" + carbCena + "g).");
+                        exceso = true;
                     }
                     
-                    // Devolvemos los datos intactos al Paciente para que se los pase a la IA
+                    if (!exceso) {
+                        System.out.println("[Nutricionista] -> OK: Consumo equilibrado dentro de los límites en todas las comidas.");
+                    }
+                    
+                    // Devolvemos los datos intactos al Paciente para que la IA haga el diagnostico de diabetes
                     ACLMessage respuesta = msg.createReply();
                     respuesta.setPerformative(ACLMessage.INFORM);
                     respuesta.setContent(datosRecibidos);
