@@ -1,24 +1,94 @@
-@relation diapredict_dataset
+@relation diagnostico_diabetes_diario_ada
 
-@attribute nombre string
 @attribute edad numeric
-@attribute glucosa numeric
-@attribute carbohidratos numeric
-@attribute riesgo {ALTO, BAJO}
+@attribute glucosa_ayunas numeric
+@attribute glucosa_post_desayuno numeric
+@attribute glucosa_antes_comida numeric
+@attribute glucosa_post_comida numeric
+@attribute glucosa_antes_cena numeric
+@attribute glucosa_post_cena numeric
+@attribute resultado {negativo,positivo}
 
 @data
-'Juan Perez', 45, 140, 60.0, ALTO
-'Maria Gomez', 23, 90, 45.5, BAJO
-'Carlos Lopez', 60, 180, 85.0, ALTO
-'Ana Martinez', 31, 95, 30.0, BAJO
-'Luis Rodriguez', 52, 155, 70.0, ALTO
-'Laura Sanchez', 19, 85, 50.0, BAJO
-'Pedro Fernandez', 68, 210, 95.5, ALTO
-'Elena Diaz', 42, 110, 40.0, BAJO
-'Miguel Angel', 57, 165, 80.0, ALTO
-'Sofia Ruiz', 28, 99, 35.0, BAJO
-'Javier Garcia', 50, 135, 65.5, ALTO
-'Carmen Torres', 35, 92, 25.0, BAJO
-'Andres Castro', 63, 195, 90.0, ALTO
-'Lucia Morales', 25, 105, 55.0, BAJO
-'Diego Jimenez', 48, 150, 75.0, ALTO
+45,85,110,90,120,88,115,negativo
+60,135,210,125,185,140,220,positivo
+32,92,125,85,130,90,118,negativo
+55,140,245,150,260,145,210,positivo
+28,78,105,82,112,79,108,negativo
+70,128,198,130,205,125,190,positivo
+41,88,115,86,122,89,110,negativo
+65,150,280,160,290,155,275,positivo
+37,95,135,92,138,91,125,negativo
+50,115,165,110,175,112,160,positivo
+22,80,95,75,100,78,98,negativo
+68,145,230,138,245,142,215,positivo
+34,84,118,88,125,85,120,negativo
+59,160,300,165,310,158,285,positivo
+43,90,128,87,130,89,122,negativo
+72,130,185,125,195,128,188,positivo
+29,82,112,80,115,83,105,negativo
+61,155,260,150,270,148,255,positivo
+38,94,132,91,136,93,128,negativo
+54,122,175,118,180,120,165,positivo
+25,76,102,78,108,80,100,negativo
+66,138,215,135,225,130,200,positivo
+31,89,120,85,124,88,115,negativo
+57,148,250,145,265,140,240,positivo
+40,86,116,84,120,87,112,negativo
+63,125,190,120,198,122,185,positivo
+27,81,108,79,114,82,106,negativo
+69,142,235,140,250,145,220,positivo
+35,93,129,90,134,89,126,negativo
+52,118,168,115,178,116,162,positivo
+24,79,98,77,104,81,102,negativo
+71,152,275,158,285,150,265,positivo
+39,87,122,86,128,88,119,negativo
+58,132,205,128,210,130,195,positivo
+33,91,126,89,132,90,124,negativo
+64,165,310,170,320,160,295,positivo
+46,85,114,83,118,86,110,negativo
+56,126,180,122,190,124,170,positivo
+30,83,106,81,110,84,104,negativo
+67,146,240,142,255,140,225,positivo
+44,95,135,93,138,92,125,negativo
+53,114,162,110,170,115,158,positivo
+26,77,100,76,105,79,99,negativo
+74,158,290,162,300,155,270,positivo
+42,88,118,85,124,87,116,negativo
+62,136,220,132,230,135,210,positivo
+36,92,130,88,135,90,128,negativo
+51,120,172,116,185,118,168,positivo
+23,80,96,78,102,81,95,negativo
+75,144,228,140,240,145,218,positivo
+48,84,112,82,116,85,108,negativo
+60,150,265,148,275,142,245,positivo
+28,94,133,90,137,91,126,negativo
+55,128,195,125,200,128,185,positivo
+45,86,117,84,122,88,114,negativo
+68,162,305,168,315,155,280,positivo
+32,90,125,87,130,89,120,negativo
+59,134,212,130,220,132,198,positivo
+37,81,105,80,110,83,102,negativo
+70,148,245,145,255,148,230,positivo
+41,95,134,92,138,94,125,negativo
+50,116,166,112,176,115,160,positivo
+25,78,101,77,106,80,98,negativo
+65,154,270,158,280,152,260,positivo
+34,87,120,85,125,86,115,negativo
+54,124,188,120,195,122,175,positivo
+29,93,131,90,135,91,127,negativo
+61,140,235,138,245,140,220,positivo
+38,82,109,80,115,84,106,negativo
+57,160,295,165,305,158,275,positivo
+40,91,128,88,132,90,122,negativo
+63,130,208,128,215,130,192,positivo
+31,85,116,83,120,86,112,negativo
+69,146,255,144,265,142,235,positivo
+35,94,136,92,139,95,128,negativo
+52,112,160,108,170,110,155,positivo
+24,76,98,75,102,78,95,negativo
+71,156,285,160,295,155,265,positivo
+47,88,121,86,126,89,118,negativo
+58,138,225,135,235,138,210,positivo
+39,83,107,81,112,84,103,negativo
+66,142,248,140,258,144,228,positivo
