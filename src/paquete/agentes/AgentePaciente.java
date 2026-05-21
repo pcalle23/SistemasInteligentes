@@ -15,20 +15,20 @@ public class AgentePaciente extends Agent {
     private AID agenteNutricionistaAID;
     private AID agentePredictorAID;
     
-    // Aqui guardaremos la ventana de Isa para poder usarla al final
+    // guardamos la ventana de Isa
     private VentanaPaciente ventana; 
 
     @Override
     protected void setup() {
         System.out.println("[Paciente] -> Agente " + getLocalName() + " iniciado.");
 
-        // Buscamos los agentes esclavos en las paginas amarillas
+        // Buscamos los agentes en las paginas amarillas
         buscarAgentesServicio();
 
-        // IMPORTANTE: Activamos el buzon especial O2A para hablar con la GUI
+        //  Activamos el buzon especial O2A para hablar con la GUI
         setEnabledO2ACommunication(true, 10);
 
-        // Añadimos los dos comportamientos de escucha
+        // Anadimos los dos comportamientos de escucha
         addBehaviour(new EscucharInterfaz());
         addBehaviour(new EscucharRespuestas());
     }
@@ -67,7 +67,7 @@ public class AgentePaciente extends Agent {
     }
 
     /**
-     * COMPORTAMIENTO 1: Escucha cuando el boton de Isa nos mete datos
+     * Escucha cuando el boton de Isa nos mete datos
      */
     private class EscucharInterfaz extends CyclicBehaviour {
         @Override
@@ -78,28 +78,47 @@ public class AgentePaciente extends Agent {
             if (obj != null) {
                 Object[] datos = (Object[]) obj;
                 
-                // Extraemos las posiciones segun el nuevo array de Isa
+                // Extraemos las posiciones segun el nuevo array de Isa (11 campos)
                 ventana = (VentanaPaciente) datos[0];
                 String nombre = (String) datos[1];
                 int edad = (int) datos[2];
-                double glucosa = (double) datos[3];
-                double carbohidratos = (double) datos[4];
                 
-                System.out.println("[Paciente] -> Recibidos datos de la GUI. Paciente: " + nombre);
+                // Mañana
+                double glucosaAyunas = (double) datos[3];
+                double carbDesayuno = (double) datos[4];
+                double glucosaPostDesayuno = (double) datos[5];
                 
+                // Tarde
+                double glucosaComida = (double) datos[6];
+                double carbComida = (double) datos[7];
+                double glucosaPostComida = (double) datos[8];
+                
+                // Noche
+                double glucosaCena = (double) datos[9];
+                double carbCena = (double) datos[10];
+                double glucosaPostCena = (double) datos[11];
+                
+                System.out.println("[Paciente] -> Recibidos datos diarios de la GUI. Paciente: " + nombre);
+                
+                // Solucion a la condicion de carrera: si no encontro agentes al arrancar, los busca ahora
                 if (agenteNutricionistaAID == null || agentePredictorAID == null) {
                     buscarAgentesServicio();
                 }
                 
-                // Iniciamos la cadena: mandamos los carbohidratos al Nutricionista
+                // Iniciamos la cadena: mandamos al Nutricionista empaquetado
                 if (agenteNutricionistaAID != null) {
                     ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
                     msg.addReceiver(agenteNutricionistaAID);
                     
-                    // Empaquetamos los datos en una linea de texto
-                    msg.setContent(nombre + "," + edad + "," + glucosa + "," + carbohidratos);
+                    // Empaquetamos los 11 datos en una sola linea de texto separada por comas
+                    String paqueteDatos = nombre + "," + edad + "," + 
+                                          glucosaAyunas + "," + carbDesayuno + "," + glucosaPostDesayuno + "," + 
+                                          glucosaComida + "," + carbComida + "," + glucosaPostComida + "," + 
+                                          glucosaCena + "," + carbCena + "," + glucosaPostCena;
+                                          
+                    msg.setContent(paqueteDatos);
                     myAgent.send(msg);
-                    System.out.println("[Paciente] -> Datos enviados al Nutricionista.");
+                    System.out.println("[Paciente] -> Diario completo enviado al Nutricionista.");
                 } else {
                     System.out.println("[Paciente] -> Error: Nutricionista no disponible.");
                 }
@@ -110,7 +129,7 @@ public class AgentePaciente extends Agent {
     }
 
     /**
-     * COMPORTAMIENTO 2: Escucha las respuestas que vuelven por JADE
+     * Escucha las respuestas que vuelven por JADE
      */
     private class EscucharRespuestas extends CyclicBehaviour {
         @Override
@@ -118,17 +137,15 @@ public class AgentePaciente extends Agent {
             ACLMessage msg = myAgent.receive();
 
             if (msg != null) {
-                String remitente = msg.getSender().getLocalName();
-                
                 // CASO A: Vuelve el informe del Nutricionista
                 if (msg.getSender().equals(agenteNutricionistaAID)) {
-                    System.out.println("[Paciente] -> El Nutricionista responde: " + msg.getContent());
+                    System.out.println("[Paciente] -> El Nutricionista responde: Dieta analizada correctamente.");
                     
                     // Reenviamos el expediente entero al Predictor para que use Weka
                     if (agentePredictorAID != null) {
                         ACLMessage msgPred = new ACLMessage(ACLMessage.REQUEST);
                         msgPred.addReceiver(agentePredictorAID);
-                        msgPred.setContent(msg.getContent()); // Lleva los datos originales y el OK del nutri
+                        msgPred.setContent(msg.getContent()); // Lleva el paquete de datos original
                         myAgent.send(msgPred);
                         System.out.println("[Paciente] -> Expediente enviado al Predictor (IA).");
                     }
