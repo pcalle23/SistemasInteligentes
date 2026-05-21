@@ -6,89 +6,106 @@ import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSource;
+
+// Imports para el preprocesamiento multivariante
 import weka.filters.Filter;
-import weka.filters.unsupervised.attribute.Remove;
+import weka.filters.supervised.attribute.AttributeSelection;
+import weka.attributeSelection.CfsSubsetEval;
+import weka.attributeSelection.GreedyStepwise;
 
 public class GestorWeka {
 
     private Classifier modelo;
-    private Instances estructuraDatos;
+    
+    // Ahora necesitamos guardar dos estructuras y el filtro a nivel global
+    private Instances estructuraOriginal;
+    private Instances estructuraFiltrada;
+    private AttributeSelection filtroMultivariante;
 
     public void entrenarModelo() {
         try {
+            // 1. Cargar datos
             DataSource source = new DataSource("diabetes.arff");
-            Instances datosOriginales = source.getDataSet();
+            estructuraOriginal = source.getDataSet();
 
-            if (datosOriginales.classIndex() == -1) {
-                datosOriginales.setClassIndex(datosOriginales.numAttributes() - 1);
+            if (estructuraOriginal.classIndex() == -1) {
+                estructuraOriginal.setClassIndex(estructuraOriginal.numAttributes() - 1);
             }
 
-            // PREPROCESAMIENTO 
-            Remove removeFilter = new Remove();
-            removeFilter.setAttributeIndices("1"); // Weka cuenta desde 1 para las opciones
-            removeFilter.setInputFormat(datosOriginales);
+            // 2. Configurar el Filtro Multivariante (CFS + GreedyStepwise)
+            filtroMultivariante = new AttributeSelection();
+            CfsSubsetEval evaluador = new CfsSubsetEval();
+            GreedyStepwise busqueda = new GreedyStepwise();
+            busqueda.setSearchBackwards(true); // Búsqueda hacia atrás, ideal en medicina
             
-            //Aplicamos el filtro: no tiene atributo 'nombre'
-            estructuraDatos = Filter.useFilter(datosOriginales, removeFilter);
+            filtroMultivariante.setEvaluator(evaluador);
+            filtroMultivariante.setSearch(busqueda);
+            filtroMultivariante.setInputFormat(estructuraOriginal);
+            
+            // 3. Aplicar el filtro para crear el dataset optimizado
+            estructuraFiltrada = Filter.useFilter(estructuraOriginal, filtroMultivariante);
+            
+            System.out.println("Preprocesamiento completado. Columnas reducidas de " + estructuraOriginal.numAttributes() + " a " + estructuraFiltrada.numAttributes() + ".");
 
-            //Inicializar el algoritmo y entrenar con los datos limpios
+            // 4. Entrenar el J48 SÓLO con los datos filtrados
             modelo = new J48();
-            modelo.buildClassifier(estructuraDatos);
-            
-            System.out.println("[IA-WEKA] Modelo J48 entrenado correctamente con " 
-                    + estructuraDatos.numInstances() + " pacientes (sin atributo String).");
+            modelo.buildClassifier(estructuraFiltrada);
+                        
+            System.out.println("Modelo J48 entrenado correctamente.");
 
         } catch (Exception e) {
-            System.err.println("[IA-WEKA] Error crítico al inicializar/entrenar el modelo: " + e.getMessage());
+            System.err.println("[Weka]: Error crítico al inicializar/entrenar el modelo: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public boolean predecirRiesgo(double edad, double glucosa, double carbohidratos) {
-        if (modelo == null || estructuraDatos == null) {
-            System.err.println("[IA-WEKA] Error: El modelo no ha sido entrenado.");
+    public boolean predecirRiesgo(double edad, double glucosaAyunas, double glucosaPostDesayuno, 
+                                  double glucosaComida, double glucosaPostComida, double glucosaCena, double glucosaPostCena) {
+                                      
+        if (modelo == null || estructuraOriginal == null) {
+            System.err.println("[Weka]: Error: El modelo no ha sido entrenado.");
             return false; 
         }
 
         try {
-            // atributos (edad, glucosa, carbohidratos, riesgo) 
-            Instance nuevaInstancia = new DenseInstance(estructuraDatos.numAttributes());
-            nuevaInstancia.setDataset(estructuraDatos);
+            // Crear el paciente con TODAS las variables (Estructura Original)
+            Instance nuevaInstancia = new DenseInstance(estructuraOriginal.numAttributes());
+            nuevaInstancia.setDataset(estructuraOriginal);
 
-            //indice: 'edad'
             nuevaInstancia.setValue(0, edad);
-            //indice: 'glucosa'
-            nuevaInstancia.setValue(1, glucosa);
-            //indice: 'carbohidratos'
-            nuevaInstancia.setValue(2, carbohidratos);
-            //indice: 'riesgo' (Weka lo calcula ahora)
+            nuevaInstancia.setValue(1, glucosaAyunas);
+            nuevaInstancia.setValue(2, glucosaPostDesayuno);
+            nuevaInstancia.setValue(3, glucosaComida);
+            nuevaInstancia.setValue(4, glucosaPostComida);
+            nuevaInstancia.setValue(5, glucosaCena);
+            nuevaInstancia.setValue(6, glucosaPostCena);
 
-            double resultadoClasificacion = modelo.classifyInstance(nuevaInstancia);
-            String prediccion = estructuraDatos.classAttribute().value((int) resultadoClasificacion);
+            // Creamos un dataset temporal de 1 solo paciente para poder pasarle el filtro
+            Instances datasetTemporal = new Instances(estructuraOriginal, 0);
+            datasetTemporal.add(nuevaInstancia);
             
-            System.out.println("[IA-WEKA] Evaluando paciente -> Edad: " + edad + " | Glucosa: " + glucosa 
-                             + " => Predicción: Riesgo " + prediccion.toUpperCase());
+            // Pasamos al paciente por el mismo filtro que usamos en el entrenamiento
+            Instances datasetFiltradoTemporal = Filter.useFilter(datasetTemporal, filtroMultivariante);
+            
+            // Extraemos al paciente ya filtrado (ahora tiene menos columnas)
+            Instance pacienteFiltrado = datasetFiltradoTemporal.firstInstance();
 
-            return prediccion.equalsIgnoreCase("ALTO");
+            // 3. Predicción con el paciente optimizado
+            double resultadoClasificacion = modelo.classifyInstance(pacienteFiltrado);
+            String prediccion = estructuraFiltrada.classAttribute().value((int) resultadoClasificacion);
+            
+            System.out.println("Evaluando paciente filtrado -> Predicción: Diágnostico " + prediccion.toUpperCase());
+
+            return prediccion.equalsIgnoreCase("positivo");
 
         } catch (Exception e) {
-            System.err.println("[IA-WEKA] Fallo al intentar predecir la nueva instancia: " + e.getMessage());
+            System.err.println("[Weka]: Fallo al intentar predecir la nueva instancia: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
 
     public static void main(String[] args) {
-        System.out.println("---TEST LOCAL WEKA ---");
-        GestorWeka gestor = new GestorWeka();
-        gestor.entrenarModelo();
-
-        System.out.println("\n--- PRUEBA 1: Paciente con parámetros críticos ---");
-        boolean esRiesgoAlto1 = gestor.predecirRiesgo(55, 190.0, 80.0);
-        System.out.println(">> Resultado esperado: true (ALTO) | Resultado obtenido: " + esRiesgoAlto1);
-
-        System.out.println("\n--- PRUEBA 2: Paciente con parámetros saludables ---");
-        boolean esRiesgoAlto2 = gestor.predecirRiesgo(25, 85.0, 45.0);
-        System.out.println(">> Resultado esperado: false (BAJO) | Resultado obtenido: " + esRiesgoAlto2);
+        
     }
 }
